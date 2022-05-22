@@ -1,0 +1,144 @@
+{# Load the tag library #}
+{% load bootstrap5 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+
+<!DOCTYPE html>
+<html style="padding: 30px;">
+  <head>
+    <title>Simple Inventory Application</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+  
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Simple Inventory Application</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item active">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/create-warehouse/">Create Warehouse</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/create-inventory-item/">Create Inventory</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/create-inventory-item/">Transfer Inventory</a>
+            </li>
+          </ul>
+        </div>
+    </nav>
+    <!-- END NAVIGATION BAR -->  
+  </head>
+  <body>
+   <h1 style="text-align: center; padding-top: 20px;">Simple Inventory Application</h1>
+   <div id='map' width="100%" style='height:500px;'></div>
+
+   <div style="text-align: center; padding-top:50px; padding-bottom:50px;" id="warehouse" class="initial">
+    <h2>Please select a warehouse!</h2>
+   </div>
+
+   <footer id="sticky-footer" style="padding: 20px;" class="navbar-light bg-light">
+    <div class="container text-center">
+      <small>Copyright &copy; Simple Inventory Application, Created by <a href="https://www.linkedin.com/in/dylan-herbig/">Dylan Herbig</a></small>
+    </div>
+   </footer>
+  </body>
+</html>
+
+
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGhlcmJpZyIsImEiOiJjbDM4YXgxMHUzdmljM2htdTR3eHJjNDlvIn0.qtQvjiKfid1cZ7i5KRwh9Q';
+    var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/streets-v10',
+    center: [-77.03, 38.91],
+    zoom: 9
+    });
+    {% for warehouse in warehouses %}
+        var marker = new mapboxgl.Marker()
+        .setLngLat([{{ warehouse.location.0 }}, {{ warehouse.location.1 }}]) // pass in longitude and latitude of each warehouse
+        .setPopup(new mapboxgl.Popup().setHTML("<h4>{{ warehouse.title }}</h4>")) // display title of each warehouse if user clicks on marker
+        .addTo(map);
+    {% endfor %}
+
+    map.on('load', () => {
+        map.addSource('locations', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': [
+                    {
+                    {% for warehouse in warehouses %}
+                        'type': 'Feature',
+                        'properties': {
+                            'title': '{{ warehouse.title }}'
+                        },
+                        'geometry': {
+                            'type': 'Point',
+                            'coordinates': [{{ warehouse.location.0 }}, {{ warehouse.location.1 }}]
+                        },
+                    {% endfor %}
+                    }
+                    
+                ]
+            }
+        })
+    });
+
+
+    map.on('click', (e) => {
+
+        let coords = e.lngLat; /* coordinates of click */
+
+        $.ajax({
+            type: "GET",
+            url: "{% url 'app:get-warehouse' %}",   /* Call python function in this script */
+            data: {"lat": coords.lat, "lng": coords.lng},   /* Passing the coordinates data */
+            success: function (response) {
+                var inventory = response[0];
+                var title = inventory[0]["title"];
+
+                if ($("#warehouse").hasClass("initial")) {
+                    $("#warehouse").empty();
+                }
+
+                if ($("#warehouse").hasClass("element")) {
+                    $("#warehouse").empty();
+                } else {
+                    $("#warehouse").addClass("element");
+                }
+
+                $("#warehouse").append(
+                    `<h2>${response[1]||""}</h2>`
+                )
+
+                for (let i = 0; i < inventory.length; i++) {
+                    $("#warehouse").append(
+                        `<p>${inventory[i]["amount"]||""}x ${inventory[i]["title"]||""} ${inventory[i]["measurement"]||""}</p>`
+                    )
+                }
+
+                $("#warehouse").append(
+                    `<a href="http://127.0.0.1:8000/detail/${response[2]}"><button>View Details</button></a> \n` +
+                    `<a href="http://127.0.0.1:8000/"><button>Transfer Inventory</button></a> \n` +
+                    `<a href="http://127.0.0.1:8000/delete-warehouse/verify/${response[2]}"><button>Delete Warehouse</button></a>`
+                )
+                console.log(response);
+            }
+        });
+
+    });
+</script>

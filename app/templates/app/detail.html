@@ -1,0 +1,98 @@
+{# Load the tag library #}
+{% load bootstrap5 %}
+
+{# Load CSS and JavaScript #}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+{# Display django.contrib.messages as Bootstrap alerts #}
+{% bootstrap_messages %}
+
+<!DOCTYPE html>
+<html style="padding: 30px;">
+  <head>
+    <title>Detail || {{ warehouse.title }}</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Simple Inventory Application</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item active">
+              <a class="nav-link" href="/">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/create-warehouse/">Create Warehouse</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/create-inventory-item/">Create Inventory</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/create-inventory-item/">Transfer Inventory</a>
+            </li>
+          </ul>
+        </div>
+    </nav>
+    <!-- END NAVIGATION BAR -->
+  </head>
+  <body>
+   <h1 style="text-align: center;">{{ warehouse.title }}</h1>
+   <div id='map' width="80%" style='height:300px;'>
+        <script>
+            mapboxgl.accessToken = 'pk.eyJ1IjoiZGhlcmJpZyIsImEiOiJjbDM4YXgxMHUzdmljM2htdTR3eHJjNDlvIn0.qtQvjiKfid1cZ7i5KRwh9Q';
+            var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v10',
+            center: [{{ warehouse.location.0 }}, {{ warehouse.location.1 }}],
+            zoom: 9
+            });
+            var marker = new mapboxgl.Marker()
+                .setLngLat([{{ warehouse.location.0 }}, {{ warehouse.location.1 }}]) // pass in longitude and latitude of each warehouse
+                .setPopup(new mapboxgl.Popup().setHTML("<h4>{{ warehouse.title }}</h4>")) // display title of each warehouse if user clicks on marker
+                .addTo(map);
+        </script>
+   </div>
+
+   <div class="container" style="position: relative;"width="300px">
+        {% for item in warehouse.inventory_items.all %}
+            
+            <form class="" style="padding: 2rem;" action={% url 'app:change-inventory' item.id %} method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-sm">
+                        <input id="amount" name="amount" type="text" value="{{ item.amount }}" min="1"></input>
+                    </div>
+                    <div class="col-sm">
+                        <p>{{ item.measurement }}</p>
+                    </div>
+                    <div class="col-sm">
+                        <p>{{ item.title }}</p>
+                    </div>
+                    <div class="col-sm">
+                        <button type="submit" name="button" class="btn btn-primary">Change</button>
+                    </div>
+            </form>
+                    <div class="col-sm">
+                        <a style="color: red;" href="{% url 'app:delete-inventory' item.id %}">
+                            {% comment %} <button style="background-color: red;" class="btn btn-primary">Delete</button> {% endcomment %}
+                            Delete
+                        </a>
+                    </div>
+                </div>
+        {% endfor %}
+        <div style="margin: 0;
+        -ms-transform: translateY(-50%);
+        transform: translateY(-50%); padding: 2rem;">
+            <a href={% url 'app:create-inventory' %}>
+                <button class="btn btn-primary" style="background-color: green;">Create New Inventory</button>
+            </a>
+        </div>
+   </div>
+  </body>
+</html>
