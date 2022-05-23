@@ -14,6 +14,6 @@ urlpatterns = [
     path('detail/<int:pk>/', views.DetailWarehouseView.as_view(), name="detail"),
     path('change-inventory/<int:pk>/', views.ChangeInventory, name="change-inventory"),
     path('delete-inventory/<int:pk>/', views.DeleteInventory, name="delete-inventory"),
-    path('delete-warehouse/<int:pk>', views.DeleteWarehouse, name="delete-warehouse"),
-    path('delete-warehouse/verify/<int:pk>', views.DeleteWarehouseVerify.as_view(), name="delete-warehouse-verify"),
+    path('delete-warehouse/<int:pk>/', views.DeleteWarehouse, name="delete-warehouse"),
+    path('delete-warehouse/verify/<int:pk>/', views.DeleteWarehouseVerify.as_view(), name="delete-warehouse-verify"),
 ]

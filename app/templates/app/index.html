@@ -33,9 +33,6 @@
             <li class="nav-item">
               <a class="nav-link" href="/create-inventory-item/">Create Inventory</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/create-inventory-item/">Transfer Inventory</a>
-            </li>
           </ul>
         </div>
     </nav>
@@ -108,8 +105,8 @@
             url: "{% url 'app:get-warehouse' %}",   /* Call python function in this script */
             data: {"lat": coords.lat, "lng": coords.lng},   /* Passing the coordinates data */
             success: function (response) {
+
                 var inventory = response[0];
-                var title = inventory[0]["title"];
 
                 if ($("#warehouse").hasClass("initial")) {
                     $("#warehouse").empty();
@@ -120,6 +117,8 @@
                 } else {
                     $("#warehouse").addClass("element");
                 }
+
+                console.log(response);
 
                 $("#warehouse").append(
                     `<h2>${response[1]||""}</h2>`
@@ -133,10 +132,8 @@
 
                 $("#warehouse").append(
                     `<a href="http://127.0.0.1:8000/detail/${response[2]}"><button>View Details</button></a> \n` +
-                    `<a href="http://127.0.0.1:8000/"><button>Transfer Inventory</button></a> \n` +
                     `<a href="http://127.0.0.1:8000/delete-warehouse/verify/${response[2]}"><button>Delete Warehouse</button></a>`
                 )
-                console.log(response);
             }
         });
 

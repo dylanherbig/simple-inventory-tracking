@@ -6,7 +6,7 @@ from django.db import models
 
 # Warehouse
 class Warehouse(models.Model):
-    location = LocationField()
+    location = LocationField(map_attrs={"center": [-77.03, 38.91], "zoom": 9})
     title = models.CharField(max_length=100, blank=False)
     pub_date = models.DateTimeField(auto_now_add=True)
 
@@ -23,12 +23,12 @@ class InventoryItem(models.Model):
     title = models.CharField(max_length=100, blank=False)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="inventory_items")
     pub_date = models.DateTimeField(auto_now_add=True)
-    edit_date = models.DateTimeField(auto_now_add=True)
+    edit_date = models.DateTimeField(auto_now_add=True, null=True)
 
     amount = models.IntegerField(
         default=1,
         validators=[
-            MinValueValidator(1)   
+            MinValueValidator(1)  # minimum value indicator 
         ]
     )
     measurement = models.CharField(max_length=100, blank=False, null=True)
